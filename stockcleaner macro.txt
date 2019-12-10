@@ -1,0 +1,158 @@
+
+
+Sub stockcleaner()
+
+
+'name each variable that will be used in the loops
+Dim stockname As String
+Dim stockpricestart As Double
+Dim stockpriceend As Double
+Dim stockpricedifference As Double
+Dim percentchange As Double
+Dim stocktotal As Double
+Dim pricerow As Double
+Dim worksheetcount As Integer
+Dim highestpercentchange As Double
+Dim lowestpercentchange As Double
+Dim higheststockcount As Double
+Dim loweststockname As String
+Dim higheststockname As String
+Dim largeststockname As String
+
+worksheetcount = ThisWorkbook.Worksheets.Count
+
+'set up worksheet loop to loop through all sheets
+' found at: https://excelhelphq.com/how-to-loop-through-worksheets-in-a-workbook-in-excel-vba/
+For K = 1 To worksheetcount
+Worksheets(K).Activate
+
+'setting up integer to cycle through the summary table
+Dim tablerowsummary As Integer
+tablerowsummary = 2
+
+'naming the headers for the summary table
+Range("i1").Value = "ticker"
+Range("j1").Value = "yearly Change"
+Range("k1").Value = "percent change"
+Range("l1").Value = "Total Stock Volume"
+
+'naming headers for the percent change table
+Range("n2").Value = "greatest % increase"
+Range("N3").Value = "greatest % decrease"
+Range("n4").Value = "greatest total volume"
+Range("o1").Value = "ticker"
+Range("p1").Value = "value"
+
+' set all variables with numbers to 0 to give starting point, price row to be used on row 2 to pull opening price
+stocktotal = 0
+stockpricestart = 0
+stockpriceend = 0
+stockpricedifference = 0
+pricerow = 2
+highestpercentchange = 0
+lowestpercentchange = 0
+higheststockcount = 0
+
+'set up loop to go to the end of any set of rows
+ For i = 2 To Cells(Rows.Count, 1).End(xlUp).Row
+
+
+ stockpricestart = Cells(pricerow, 3).Value
+'consider if stock did not start until later in the year, move to next row
+ If stockpricestart = 0 Then
+    pricerow = pricerow + 1
+ ElseIf Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+ 
+    'store stock name to place in list later
+    stockname = Cells(i, 1).Value
+    
+    'add on final value for the stock total
+    stocktotal = stocktotal + Cells(i, 7).Value
+            
+    'store final stock price
+    stockpriceend = Cells(i, 6).Value
+    
+    'establish final variable for percent calculation
+    stockpricedifference = stockpriceend - stockpricestart
+    
+    'print ticker name onto summary table using tablerowsummary to establish which row
+    Range("i" & tablerowsummary).Value = stockname
+    
+    'print change in stock to summary table
+    Range("j" & tablerowsummary).Value = stockpricedifference
+    Range("K" & tablerowsummary).Value = Format(stockpricedifference / stockpricestart, "percent")
+    
+ 
+    'print total stock volume onto summary table using tablerowsummary to establish which row
+    Range("l" & tablerowsummary).Value = stocktotal
+    
+    'adding 1 so that when called again, it will move to the next row
+    tablerowsummary = tablerowsummary + 1
+    
+
+    
+    'refresh variables for every loop
+    stocktotal = 0
+    stockpricestart = 0
+    stockpriceend = 0
+    stockpricedifference = 0
+    
+    'set price row to row below to pull next beginning price for next ticker utilizing i
+    pricerow = i + 1
+    
+
+  Else
+  
+  'continually add stock value as loop runs
+   stocktotal = stocktotal + Cells(i, 7).Value
+   
+  End If
+  Next i
+  
+'format cells based on positive or negative values using loop. adjust column to only highlight the summary table
+  For j = 2 To Cells(Rows.Count, 10).End(xlUp).Row
+   If Cells(j, 10).Value < 0 Then
+   
+   'Color set to red for negative values
+    Cells(j, 10).Interior.ColorIndex = 3
+    
+    'all other values set to green. Assuming 0 is a positive value
+    Else
+    Cells(j, 10).Interior.ColorIndex = 4
+    
+   End If
+   
+   Next j
+'cycle through newly created list to find highest percent increase and decrease
+For L = 2 To Cells(Rows.Count, 11).End(xlUp).Row
+   If Cells(L, 11).Value > highestpercentchange Then
+    highestpercentchange = Cells(L, 11).Value
+    higheststockname = Cells(L, 9).Value
+    End If
+    If Cells(L, 11).Value < lowestpercentchange Then
+    lowestpercentchange = Cells(L, 11).Value
+    loweststockname = Cells(L, 9).Value
+    End If
+    Next L
+  'final loop to find the highest stock volume
+  For M = 2 To Cells(Rows.Count, 12).End(xlUp).Row
+   If Cells(M, 12).Value > higheststockcount Then
+   higheststockcount = Cells(M, 12).Value
+   largeststockname = Cells(M, 9).Value
+   End If
+   Next M
+   ' drop values from previous loops into table
+   Range("o2").Value = higheststockname
+   Range("o3").Value = loweststockname
+   Range("o4").Value = largeststockname
+   'additional formatting applied to reflect as percent
+   Range("p2").Value = Format(highestpercentchange, "percent")
+   Range("p3").Value = Format(lowestpercentchange, "Percent")
+   Range("p4").Value = higheststockcount
+ 
+Next K
+  
+End Sub
+
+
+
